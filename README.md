@@ -1,8 +1,8 @@
 # R2D2
 
-EcHo
+InterSystems Bot
 
-This bot has been created using [Bot Framework](https://dev.botframework.com), it shows how to create a simple bot that accepts input from the user and echoes it back.
+This bot has been created using [Bot Framework](https://dev.botframework.com). It is capable of fetching data from FHIR repository and present it in a well formatted manner.
 
 ## Prerequisites
 
