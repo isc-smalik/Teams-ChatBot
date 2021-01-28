@@ -352,6 +352,7 @@ class WelcomeUserBot(ActivityHandler):
                 await turn_context.send_activity("Here are the care providers' names received by REST:")
                 for provider in self.list_care_provider:
                     await turn_context.send_activity(provider)
+                await self.__send_MDT_card(turn_context)
             #mention provider in the teams
             elif "mention" in text:
                 if turn_context.activity.channel_id == Channels.ms_teams:
@@ -556,6 +557,85 @@ class WelcomeUserBot(ActivityHandler):
                     "url": "https://usconfluence.iscinternal.com/display/AU101/TEAMS%3A+Technical+Discovery"
                 }
             ]
+        }
+
+        return await turn_context.send_activity(
+            MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
+        )
+
+    async def __send_MDT_card(self, turn_context:TurnContext):
+        ADAPTIVE_CARD_CONTENT = {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.0",
+            "speak": "<s>Your  Multidisciplinary Team Meeting<break strength='weak'/> is starting at ${formatDateTime(start.dateTime, 'HH:mm')}pm</s><s>Do you want to snooze <break strength='weak'/> or do you want to send a late notification to the attendees?</s>",
+            "body": [
+                {
+                    "type": "TextBlock",
+                    "text": "Multidisciplinary Team Meeting",
+                    "size": "Large",
+                    "weight": "Bolder",
+                    "wrap": True
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "Location : Microsoft Teams",
+                    "isSubtle": True,
+                    "wrap": True
+                },
+                {
+                    "type": "Input.Time",
+                    "id": "T",
+                    "label": "Time",
+                    "value": "14:00",
+                    "min": "07:00",
+                    "max": "16:00",
+                    "spacing": "Small",
+                    "separator": True
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "Choose users to add to meeting",
+                    "wrap": True,
+                    "size": "Medium"
+                },
+                {
+                    "type": "Input.ChoiceSet",
+                    "choices": [
+                        {
+                            "title": "Michael",
+                            "value": "None"
+                        },
+                        {
+                            "title": "Quinten",
+                            "value": "None"
+                        },
+                        {
+                            "title": "Harshitha",
+                            "value": "None"
+                        },
+                        {
+                            "title": "Jolyon",
+                            "value": "None"
+                        },
+                        {
+                            "title": "Sergei",
+                            "value": "None"
+                        }
+                    ],
+                    "placeholder": "Placeholder text",
+                    "isMultiSelect": True,
+                    "$data": "Users"
+                }
+            ],
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Create Meeting"
+                }
+            ],
+            "id": "Create Meating",
+            "fallbackText": "a"
         }
 
         return await turn_context.send_activity(
