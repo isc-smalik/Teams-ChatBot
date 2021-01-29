@@ -347,30 +347,30 @@ class WelcomeUserBot(ActivityHandler):
                     await self.__send_about_card(turn_context)
 
             #list all providers
-            elif text in ("notifications","notification"):
+            elif text in ("notification", "noti"):
                 global cp_list
                 cp_list = ""
                 for provider in self.list_care_provider:
-                    cp_list = cp_list + (f"{provider}\n\n")
+                    cp_list = cp_list + (f"{provider['id']} - {provider['name']} \n\n")
                 await self.__send_result_card(turn_context)
             #mention provider in the teams
-            elif "mention" in text:
+            elif text in ("mention", "mention care providers"):
                 if turn_context.activity.channel_id == Channels.ms_teams:
                     try:
-                        await turn_context.send_activity("Mentioning all the care providers:")
                         members = await TeamsInfo.get_team_members(turn_context)
                         for provider in self.list_care_provider:
                             for member in members:
-                                if member.name == provider:
+                                if member.name == provider['name']:
                                     mention = Mention(
                                     mentioned=member,
                                     text=f"<at>{member.name}</at>",
                                     type="mention",
                                     )
-
-                                    reply_activity = MessageFactory.text(f"Care Provider: {mention.text}")
+                                    reply_activity = MessageFactory.text(f"{mention.text}")
                                     reply_activity.entities = [Mention().deserialize(mention.serialize())]
                                     await turn_context.send_activity(reply_activity)
+                        self.list_care_provider.clear()
+                        
                     except:
                         await turn_context.send_activity("This function is only supported in teams/channels!")
                 else:
@@ -673,12 +673,14 @@ class WelcomeUserBot(ActivityHandler):
                     "type": "TextBlock",
                     "text": "List of Care Providers",
                     "wrap": True,
+                    #"horizontalAlignment": "Center",
                     "size": "Medium",
                     "weight": "Bolder",
                     "separator": True
                 },
                 {
                     "type": "TextBlock",
+                    #"horizontalAlignment": "Center",
                     "text": (f"{cp_list}"),
                     "wrap": True,
                     "separator": True
@@ -689,7 +691,11 @@ class WelcomeUserBot(ActivityHandler):
                     "type": "Action.Submit",
                     "title": "Mention Care Providers",
                     "data": {
-                                "action":"Mention Users"
+                        "msteams" : {
+
+                                "type":"imBack",
+                                "value":"Mention Care Providers"
+                        }
 
                     }
                 }

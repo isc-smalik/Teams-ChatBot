@@ -70,7 +70,7 @@ ADAPTER.on_turn_error = on_error
 CONVERSATION_REFERENCES: Dict[str, ConversationReference] = dict()
 
 #CareProviders list
-lsCP : List[str] = list()
+lsCP = list()
 
 # Create MemoryStorage, UserState
 MEMORY = MemoryStorage()
@@ -107,11 +107,12 @@ async def post_notify(req: Request) -> Response:
     body = await req.json()
     for item in body:
         name = item["name"]
-        lsCP.append(name)   
-    await _send_post_body(req)
+        id = item["id"]
+        lsCP.append({"name":name,"id":id})   
+    await _send_post_body()
     return Response(status=HTTPStatus.OK, text="Message has been sent")
 
-async def _send_post_body(req : Request):
+async def _send_post_body():
     for conversation_reference in CONVERSATION_REFERENCES.values():
         await ADAPTER.continue_conversation(
             conversation_reference,
