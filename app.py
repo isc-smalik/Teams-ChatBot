@@ -105,16 +105,17 @@ async def messages(req: Request) -> Response:
 #Listen for incoming requests on /api/post_notify
 async def post_notify(req: Request) -> Response:
     body = await req.json()
-    name = body["name"]
-    await _send_post_body(req, name)
-    lsCP.append(name)   
+    for item in body:
+        name = item["name"]
+        lsCP.append(name)   
+    await _send_post_body(req)
     return Response(status=HTTPStatus.OK, text="Message has been sent")
 
-async def _send_post_body(req : Request, name : str):
+async def _send_post_body(req : Request):
     for conversation_reference in CONVERSATION_REFERENCES.values():
         await ADAPTER.continue_conversation(
             conversation_reference,
-            lambda turn_context: turn_context.send_activity(f"Get REST post: {name}"),
+            lambda turn_context: turn_context.send_activity(f"You have a new notification"),
             CONFIG.APP_ID
         )
 

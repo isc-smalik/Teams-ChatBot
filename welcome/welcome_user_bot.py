@@ -39,8 +39,9 @@ trak_allergy_url = ''
 gname = ''
 trak_lastUpdated = ''
 allergy_data = ''
+cp_list = ''
 
-# Greet users who interact with the bot for first time
+
 class WelcomeUserBot(ActivityHandler):
     def __init__(self, conversation_references: Dict[str, ConversationReference], user_state: UserState, list_care_provider):
         self.conversation_references = conversation_references
@@ -85,8 +86,6 @@ class WelcomeUserBot(ActivityHandler):
                 await turn_context.send_activity(
                     f"Hi { member.name }. " + self.WELCOME_MESSAGE
                 )
-
-                await turn_context.send_activity(self.INFO_MESSAGE)
 
                 await turn_context.send_activity(self.PATTERN_MESSAGE)
 
@@ -348,11 +347,12 @@ class WelcomeUserBot(ActivityHandler):
                     await self.__send_about_card(turn_context)
 
             #list all providers
-            elif text == "provider":
-                await turn_context.send_activity("Here are the care providers' names received by REST:")
+            elif text in ("notifications","notification"):
+                global cp_list
+                cp_list = ""
                 for provider in self.list_care_provider:
-                    await turn_context.send_activity(provider)
-                await self.__send_MDT_card(turn_context)
+                    cp_list = cp_list + (f"{provider}\n\n")
+                await self.__send_result_card(turn_context)
             #mention provider in the teams
             elif "mention" in text:
                 if turn_context.activity.channel_id == Channels.ms_teams:
@@ -636,6 +636,66 @@ class WelcomeUserBot(ActivityHandler):
             ],
             "id": "Create Meating",
             "fallbackText": "a"
+        }
+
+        return await turn_context.send_activity(
+            MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
+        )
+
+    async def __send_result_card(self, turn_context:TurnContext):
+        ADAPTIVE_CARD_CONTENT = {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.2",
+            "body": [
+                {
+                    "type": "TextBlock",
+                    "text": "Result from TrakCare",
+                    "size": "Large",
+                    "weight": "Bolder",
+                    "wrap": True
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "Click the button below to view the result in TrakCare",
+                    "wrap": True
+                },
+                {
+                    "type": "ActionSet",
+                    "actions": [
+                        {
+                            "type": "Action.Submit",
+                            "title": "View Result"
+                        }
+                    ]
+                },
+                {
+                    "type": "TextBlock",
+                    "text": "List of Care Providers",
+                    "wrap": True,
+                    "size": "Medium",
+                    "weight": "Bolder",
+                    "separator": True
+                },
+                {
+                    "type": "TextBlock",
+                    "text": (f"{cp_list}"),
+                    "wrap": True,
+                    "separator": True
+                }
+            ],
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Mention Care Providers",
+                    "data": {
+                                "action":"Mention Users"
+
+                    }
+                }
+            ],
+            "id": "Mention Care Providers",
+            "fallbackText": "Mention Care Providers"
         }
 
         return await turn_context.send_activity(
