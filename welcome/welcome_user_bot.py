@@ -168,7 +168,7 @@ class WelcomeUserBot(ActivityHandler):
 
             
             # token needs to be entered manually.
-            token = '78qai3V9z7ICJrmfF0mFZXziUkJq8t3XAVcVgjrivs-lBUqhPLUnJZO8it2Wuinbkpqi15zIUvt6O8WmUTWBVg'
+            token = 'IiU-3EAUcBTssUvwh7FcQuM1buLNhAq-Y52r_Bkiemo90m5LG6yx0R-XpWRPwX9bMPdJS4Vt1ynhBMAmsK_k0w'
             call_header = {'accept':'application/json','Authorization': 'Bearer ' + token}
 
             # keywords that will be used by the bot to compare the user input
