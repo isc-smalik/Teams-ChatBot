@@ -41,6 +41,8 @@ gname = ''
 trak_lastUpdated = ''
 allergy_data = ''
 cp_list = ''
+OAuth_url = ''
+token = ''
 
 
 class WelcomeUserBot(ActivityHandler):
@@ -94,6 +96,8 @@ class WelcomeUserBot(ActivityHandler):
         """
         Respond to messages sent from the user.
         """
+        
+
         self._add_conversation_reference(turn_context.activity)
         
         global trak_name
@@ -105,7 +109,9 @@ class WelcomeUserBot(ActivityHandler):
         global trak_url
         global gname
         global trak_lastUpdated
-        global allergy_data 
+        global allergy_data
+        global OAuth_url
+        global token
         
         # Get the state properties from the turn context.
         welcome_user_state = await self.user_state_accessor.get(
@@ -129,40 +135,52 @@ class WelcomeUserBot(ActivityHandler):
         else:
             # removes mention from the user input in channels or group
             TurnContext.remove_recipient_mention(turn_context.activity)
-            # makes the text in lower case and strips of any spaces
-            text = turn_context.activity.text.lower().strip() 
+            """            
+            #Looking for any replies via cards
+            channelData = turn_context.activity.channel_data
+            if "postBack" in channelData:  
+                # Credentials for OAuth2
+                authorize_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/authorize"
+                token_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/token"
+                state = 'asdasdasdasdasdasasd'
+                scope = 'patient%2F*.read%20launch%2Fpatient'
+                callback_uri = "x-argonaut-app://HealthProviderLogin/"
+                client_id = '6A605kYem9GmG38Vo6TTzh8IFnjWHZWtRn46K1hoxQY'
+                client_secret = 'POrisHrcdMvUKmaR6Cea0b8jtx-z4ewVWrnaIXASO-H3tB3g5MgPV7Vqty7OP8aEbSGENWRMkeVuJJKZDdG7Pw'
+                OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
+                val = json.dumps(turn_context.activity.value)
+                commandToken = json.loads(val)
+                authorization_code = commandToken['SimpleVal']
+                await turn_context.send_activity(f"your auth Code : {commandToken['SimpleVal']}")
+                data = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': callback_uri}
+                access_token_response = requests.post(token_url, data=data, verify=True, allow_redirects=True, auth=(client_id, client_secret))
+                tokens = json.loads(access_token_response.text)
+                access_token = tokens['access_token']
+                token = access_token
+                await turn_context.send_activity(f"your token : {token}")
+                return None
+            """
             
+            # makes the text in lower case and strips of any spaces
+            text = turn_context.activity.text.lower().strip()
+            # splits the user input and makes a list
+            ltxt = text.split(" ")
 
-            """
-            #Use these credentials for using the local IRIS instance using basic auth
-            USER = '_system'
-            PASS = 'SYS'
-            """
-            # Credentials for OAuth2
-            """
-            authorize_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/authorize"
-            token_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/token"
-            state = 'asdasdasdasdasdasasd'
-            scope = 'patient%2F*.read%20launch%2Fpatient'
-            callback_uri = "x-argonaut-app://HealthProviderLogin/"
-            client_id = '6A605kYem9GmG38Vo6TTzh8IFnjWHZWtRn46K1hoxQY'
-            client_secret = 'POrisHrcdMvUKmaR6Cea0b8jtx-z4ewVWrnaIXASO-H3tB3g5MgPV7Vqty7OP8aEbSGENWRMkeVuJJKZDdG7Pw'
-            OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
-            """
+            
             # token needs to be entered manually.
             token = '78qai3V9z7ICJrmfF0mFZXziUkJq8t3XAVcVgjrivs-lBUqhPLUnJZO8it2Wuinbkpqi15zIUvt6O8WmUTWBVg'
             call_header = {'accept':'application/json','Authorization': 'Bearer ' + token}
 
-            # splits the user input and makes a list
-            ltxt = text.split(" ")
-            
             # keywords that will be used by the bot to compare the user input
             if text in ("hello", "hi"):
                 await turn_context.send_activity(f"why would you say {text} again ?")
             
             elif text in ("help", "intro"):
-                    await self.__send_intro_card(turn_context)
+                await self.__send_intro_card(turn_context)
             
+            elif text in ("login"):
+                await self.__send_test_card(turn_context)                    
+                                        
             elif text in ("patient"):
                 await turn_context.send_activity('Please type the patient ID after patient. Eg: "patient 137"')
             
@@ -720,6 +738,122 @@ class WelcomeUserBot(ActivityHandler):
         return await turn_context.send_activity(
             MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
         )
+        
+    async def __send_oauth_card(self, turn_context:TurnContext):
+        ADAPTIVE_CARD_CONTENT = {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.0",
+            "body": [
+                {
+                    "type": "ColumnSet",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": 2,
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "FHIR Login Wizard",
+                                    "weight": "Bolder",
+                                    "size": "Medium",
+                                    "wrap": True
+                                },
+                                {
+                                    "type": "TextBlock",
+                                    "text": "Click the button below to open a login window",
+                                    "isSubtle": True,
+                                    "wrap": True
+                                },
+                                {
+                                    "type": "Container",
+                                    "items": [
+                                        {
+                                            "type": "ActionSet",
+                                            "actions": [
+                                                {
+                                                    "type": "Action.OpenUrl",
+                                                    "title": "Login",
+                                                    "url":(f"{OAuth_url}")
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "TextBlock",
+                                            "text": "Enter the Authorization code below and press submit",
+                                            "wrap": True
+                                        },
+                                        {
+                                            "type": "Input.Text",
+                                            "id": "Auth Code",
+                                            "placeholder": "Enter Authorization Code Here"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Submit Authorization Code",
+                    "data": {
+                        "msteams": {
+                            "type":"messageBack",
+                            "text":"This goes to the bot",
+                            "value":"{\"bfKey\": \"bfVal\", \"conflictKey\": \"from value\"}"
+                        }
+                    }
+                }
+            ]
+        }
+        return await turn_context.send_activity(
+            MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
+        )
+    async def __send_test_card(self, turn_context:TurnContext):
+        ADAPTIVE_CARD_CONTENT = {
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "type": "AdaptiveCard",
+            "version": "1.0",
+            "body": [
+                {
+                    "type": "TextBlock",
+                    "size": "Medium",
+                    "weight": "Bolder",
+                    "text": "EnterAuth code",
+                    "horizontalAlignment": "Center",
+                    "wrap": True
+                },
+                {
+                    "type": "TextBlock",
+                    "text": (f"{OAuth_url}"),
+                    "wrap": True
+                },
+                {
+                    "type": "Input.Text",
+                    "style": "text",
+                    "id": "SimpleVal"
+                }
+            ],
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Click me for messageBack",
+                    "data": {
+                        "msteams": {
+                            "type": "messageBack",
+                            "text": "text to bots",
+                            "value": "{\"bfKey\": \"bfVal\", \"conflictKey\": \"from value\"}"
+                        }
+                    }
+                }
+            ]
+        }
+        return await turn_context.send_activity(
+            MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
+        )
 
     def _add_conversation_reference(self, activity: Activity):
             """
@@ -733,20 +867,16 @@ class WelcomeUserBot(ActivityHandler):
                 conversation_reference.user.id
             ] = conversation_reference
 
+
 #Time Zone converter
 def zone_convertor(date_time):
     #Auto-detect zones:
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
-
     utc = datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
-
     # Tell the datetime object that it's in UTC time zone since 
     utc = utc.replace(tzinfo=from_zone)
-
     # Convert time zone
     central = str(utc.astimezone(to_zone))
-
-
     return central[0:16]
 
