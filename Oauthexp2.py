@@ -23,10 +23,10 @@ username = 'superuser'
 password = 'SYS'
 
 OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
-#webbrowser.open(OAuth_url)
-#authorization_code = input(":")
+webbrowser.open(OAuth_url)
+authorization_code = input(":")
 
-#"""
+"""
 #mcookiejar = mechanize.CookieJar()
 br = mechanize.Browser()
 br.set_handle_robots(False)
@@ -59,7 +59,7 @@ auth_code = str(ac)
 get_url = auth_code[13:-1]
 authorization_code = auth_code[90:176]
 referer_url = auth_code[13:176] + "&stage=login:1"
-print(f"authorization code = {authorization_code}")#"""
+print(f"authorization code = {authorization_code}")
 print(f"get url = {get_url}")
 print (f"referer url = {referer_url}")
 
@@ -68,8 +68,6 @@ lheader = {"referer" : referer_url,
             }
 
 last_resp = requests.get(get_url, headers = lheader)
-
-
 """
 
 data = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': callback_uri}
@@ -81,7 +79,6 @@ access_token = tokens['access_token']
 
 print(f"Response = {access_token_response.text}")
 
-"""
 
 """
 #authorization_code = request.args.get('code')
@@ -175,4 +172,24 @@ print(login_url)
 login_result = s.post(login_url, data=payload)
 
 print(login_result)
+"""
+
+# Try to put the webpage in bot
+
+"""
+elif text == "login":
+    webbrowser.open(OAuth_url)
+    await turn_context.send_activity("Please copy the authorization code from the url and send it back as 'ac auth_code'")
+
+elif ltxt[0] == "ac":
+    try:
+        authorization_code = ltxt[1]
+        data = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': callback_uri}
+        access_token_response = requests.post(token_url, data=data, verify=True, allow_redirects=True, auth=(client_id, client_secret))
+        tokens = json.loads(access_token_response.text)
+        access_token = tokens['access_token']
+        token = access_token
+        await turn_context.send_activity("Now you have a valid token !")
+    except:
+        await turn_context.send_activity("Invalid Authorization Code")
 """

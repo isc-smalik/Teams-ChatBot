@@ -27,6 +27,7 @@ import json
 from datetime import datetime
 from dateutil import tz
 from typing import List, Dict
+import webbrowser
 
 #Globals for patient data
 trak_url = ''
@@ -131,10 +132,22 @@ class WelcomeUserBot(ActivityHandler):
             # makes the text in lower case and strips of any spaces
             text = turn_context.activity.text.lower().strip() 
             
+
             """
             #Use these credentials for using the local IRIS instance using basic auth
             USER = '_system'
             PASS = 'SYS'
+            """
+            # Credentials for OAuth2
+            """
+            authorize_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/authorize"
+            token_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/token"
+            state = 'asdasdasdasdasdasasd'
+            scope = 'patient%2F*.read%20launch%2Fpatient'
+            callback_uri = "x-argonaut-app://HealthProviderLogin/"
+            client_id = '6A605kYem9GmG38Vo6TTzh8IFnjWHZWtRn46K1hoxQY'
+            client_secret = 'POrisHrcdMvUKmaR6Cea0b8jtx-z4ewVWrnaIXASO-H3tB3g5MgPV7Vqty7OP8aEbSGENWRMkeVuJJKZDdG7Pw'
+            OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
             """
             # token needs to be entered manually.
             token = '78qai3V9z7ICJrmfF0mFZXziUkJq8t3XAVcVgjrivs-lBUqhPLUnJZO8it2Wuinbkpqi15zIUvt6O8WmUTWBVg'
