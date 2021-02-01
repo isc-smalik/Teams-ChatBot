@@ -679,30 +679,30 @@ class WelcomeUserBot(ActivityHandler):
             "type": "AdaptiveCard",
             "version": "1.2",
             "body": [
+                # {
+                #     "type": "TextBlock",
+                #     "text": "Result from TrakCare",
+                #     "size": "Large",
+                #     "weight": "Bolder",
+                #     "wrap": True
+                # },
+                # {
+                #     "type": "TextBlock",
+                #     "text": "Click the button below to view the result in TrakCare",
+                #     "wrap": True
+                # },
+                # {
+                #     "type": "ActionSet",
+                #     "actions": [
+                #         {
+                #             "type": "Action.Submit",
+                #             "title": "View Result"
+                #         }
+                #     ]
+                # },
                 {
                     "type": "TextBlock",
-                    "text": "Result from TrakCare",
-                    "size": "Large",
-                    "weight": "Bolder",
-                    "wrap": True
-                },
-                {
-                    "type": "TextBlock",
-                    "text": "Click the button below to view the result in TrakCare",
-                    "wrap": True
-                },
-                {
-                    "type": "ActionSet",
-                    "actions": [
-                        {
-                            "type": "Action.Submit",
-                            "title": "View Result"
-                        }
-                    ]
-                },
-                {
-                    "type": "TextBlock",
-                    "text": "List of Care Providers",
+                    "text": "List of Care Providers for MDT",
                     "wrap": True,
                     #"horizontalAlignment": "Center",
                     "size": "Medium",
