@@ -1,5 +1,4 @@
 from os import SEEK_END
-from aiohttp.web_urldispatcher import Resource
 from botbuilder.core import (
     ActivityHandler,
     TurnContext,
@@ -9,27 +8,21 @@ from botbuilder.core import (
 )
 from botbuilder.schema import (
     ChannelAccount,
-    CardImage,
-    CardAction,
-    ActionTypes,
-    Attachment,
-    MediaUrl,
     ConversationReference,
     Activity,
     Mention
 )
 
-from botbuilder.core.teams import TeamsActivityHandler, TeamsInfo
+from botbuilder.core.teams import TeamsInfo
 from botframework.connector import Channels
 from data_models import WelcomeUserState
 import requests
 import json
 from datetime import datetime
 from dateutil import tz
-from typing import List, Dict
-import webbrowser
+from typing import Dict
 
-#Globals for patient data
+#Globals used throughout the bot
 trak_url = ''
 trak_name = ''
 trak_recordNumber = ''
@@ -60,7 +53,7 @@ class WelcomeUserBot(ActivityHandler):
 
         self.WELCOME_MESSAGE = "Hi I am InterSystems Bot"
 
-        self.INFO_MESSAGE = "I am here to make your life easy"
+        #self.INFO_MESSAGE = "Put any new infor here"
 
         self.PATTERN_MESSAGE = "Not sure what you should do next ?   Try typing help or intro"
 
@@ -96,8 +89,6 @@ class WelcomeUserBot(ActivityHandler):
         """
         Respond to messages sent from the user.
         """
-        
-
         self._add_conversation_reference(turn_context.activity)
         
         global trak_name
@@ -111,7 +102,6 @@ class WelcomeUserBot(ActivityHandler):
         global trak_lastUpdated
         global allergy_data
         global OAuth_url
-        global token
         
         # Get the state properties from the turn context.
         welcome_user_state = await self.user_state_accessor.get(
@@ -135,31 +125,35 @@ class WelcomeUserBot(ActivityHandler):
         else:
             # removes mention from the user input in channels or group
             TurnContext.remove_recipient_mention(turn_context.activity)
-            """            
-            #Looking for any replies via cards
+
+            # Credentials for OAuth2           
+            authorize_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/authorize"
+            token_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/token"
+            state = 'asdasdasdasdasdasasd'
+            scope = 'patient%2F*.read%20launch%2Fpatient'
+            callback_uri = "x-argonaut-app://HealthProviderLogin/"
+            client_id = '6A605kYem9GmG38Vo6TTzh8IFnjWHZWtRn46K1hoxQY'
+            client_secret = 'POrisHrcdMvUKmaR6Cea0b8jtx-z4ewVWrnaIXASO-H3tB3g5MgPV7Vqty7OP8aEbSGENWRMkeVuJJKZDdG7Pw'
+            OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
+            
+            # Process data from teams to check if there is input via cards
             channelData = turn_context.activity.channel_data
-            if "postBack" in channelData:  
-                # Credentials for OAuth2
-                authorize_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/authorize"
-                token_url = "https://tcfhirsandbox.intersystems.com.au/oauth2/token"
-                state = 'asdasdasdasdasdasasd'
-                scope = 'patient%2F*.read%20launch%2Fpatient'
-                callback_uri = "x-argonaut-app://HealthProviderLogin/"
-                client_id = '6A605kYem9GmG38Vo6TTzh8IFnjWHZWtRn46K1hoxQY'
-                client_secret = 'POrisHrcdMvUKmaR6Cea0b8jtx-z4ewVWrnaIXASO-H3tB3g5MgPV7Vqty7OP8aEbSGENWRMkeVuJJKZDdG7Pw'
-                OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
-                val = json.dumps(turn_context.activity.value)
-                commandToken = json.loads(val)
-                authorization_code = commandToken['SimpleVal']
-                await turn_context.send_activity(f"your auth Code : {commandToken['SimpleVal']}")
-                data = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': callback_uri}
-                access_token_response = requests.post(token_url, data=data, verify=True, allow_redirects=True, auth=(client_id, client_secret))
-                tokens = json.loads(access_token_response.text)
-                access_token = tokens['access_token']
-                token = access_token
-                await turn_context.send_activity(f"your token : {token}")
-                return None
-            """
+            enter_val = turn_context.activity.value
+            if enter_val != None or "postBack" in channelData:
+                global token
+                try:
+                    val = json.dumps(turn_context.activity.value)
+                    commandToken = json.loads(val)
+                    authorization_code = commandToken['SimpleVal']
+                    data = {'grant_type': 'authorization_code', 'code': authorization_code, 'redirect_uri': callback_uri}
+                    access_token_response = requests.post(token_url, data=data, verify=True, allow_redirects=True, auth=(client_id, client_secret))
+                    tokens = json.loads(access_token_response.text)
+                    access_token = tokens['access_token']
+                    token = access_token
+                    await turn_context.send_activity(f"Login successful !​​​​")
+                    return None
+                except:
+                    await turn_context.send_activity(f"Authorization Code is Invalid !")
             
             # makes the text in lower case and strips of any spaces
             text = turn_context.activity.text.lower().strip()
@@ -167,11 +161,13 @@ class WelcomeUserBot(ActivityHandler):
             ltxt = text.split(" ")
 
             
-            # token needs to be entered manually.
-            token = 'IiU-3EAUcBTssUvwh7FcQuM1buLNhAq-Y52r_Bkiemo90m5LG6yx0R-XpWRPwX9bMPdJS4Vt1ynhBMAmsK_k0w'
+            # Use this if cards dosen't work for you, token needs to be entered manually each time it expires.
+            #token = 'IiU-3EAUcBTssUvwh7FcQuM1buLNhAq-Y52r_Bkiemo90m5LG6yx0R-XpWRPwX9bMPdJS4Vt1ynhBMAmsK_k0w'
+            
+            # header for reqesting data from FHIR 
             call_header = {'accept':'application/json','Authorization': 'Bearer ' + token}
 
-            # keywords that will be used by the bot to compare the user input
+            # keywords that will be used by the bot to compare the user input and react accordingly
             if text in ("hello", "hi"):
                 await turn_context.send_activity(f"why would you say {text} again ?")
             
@@ -179,7 +175,7 @@ class WelcomeUserBot(ActivityHandler):
                 await self.__send_intro_card(turn_context)
             
             elif text in ("login"):
-                await self.__send_test_card(turn_context)                    
+                await self.__send_oauth_card(turn_context)                   
                                         
             elif text in ("patient"):
                 await turn_context.send_activity('Please type the patient ID after patient. Eg: "patient 137"')
@@ -281,12 +277,16 @@ class WelcomeUserBot(ActivityHandler):
                             allergy_data = (f"{trak_name} have no recorded allergies")
                         
                         await self.__send_about_card(turn_context)
+                    
+                    else:
+                        await turn_context.send_activity("You are not logged in. Please type 'Login' to start your session !")
 
             elif ltxt[0] == "mrn":
+                
                 url = "https://tcfhirsandbox.intersystems.com.au/fhir/dstu2/Patient?identifier=" + ltxt[1]
                 response = requests.get(url, headers = call_header, verify = True)
                 if response.status_code == 404:
-                    await turn_context.send_activity("3rd Patient not found !")
+                    await turn_context.send_activity("Patient not found !")
                 elif response.status_code == 401 :
                     await turn_context.send_activity("Your token has expired !")
                 elif response.status_code == 200 :
@@ -356,7 +356,6 @@ class WelcomeUserBot(ActivityHandler):
                                 allergy_recordedDate = allergy_recordedDate + zone_convertor(dt_format) + "|"
                             except:
                                 allergy_recordedDate = "Date Unknown"
-                            
                             index = index - 1
                             count = count - 1
 
@@ -364,11 +363,10 @@ class WelcomeUserBot(ActivityHandler):
                         list_reaction = allergy_reaction.split(":")
                         list_severity = allergy_severity.split(":")
                         list_date = allergy_recordedDate.split("|")
-
                         allergy_data = ""
-                        total_allergy = int(a_total)
-                            
+                        total_allergy = int(a_total) 
                         list_index = 0
+                        
                         while list_index < total_allergy:
                             allergy_data = allergy_data + (f"Allergen : {list_name[list_index]}\n\nReaction : {list_reaction[list_index]}\n\nSeverity : {list_severity[list_index]}\n\nRecorded Date : {list_date[list_index]}\n\n-------------------------------------\n\n")
                             list_index+=1
@@ -376,6 +374,9 @@ class WelcomeUserBot(ActivityHandler):
                         allergy_data = (f"{trak_name} have no recorded allergies")
                         
                     await self.__send_about_card(turn_context)
+                
+                else:
+                        await turn_context.send_activity("You are not logged in. Please type 'Login' to start your session !")
 
             #list all providers
             elif text in ("notification", "noti"):
@@ -384,6 +385,7 @@ class WelcomeUserBot(ActivityHandler):
                 for provider in self.list_care_provider:
                     cp_list = cp_list + (f"{provider['id']} - {provider['name']} \n\n")
                 await self.__send_result_card(turn_context)
+            
             #mention provider in the teams
             elif text in ("mention", "mention care providers"):
                 if turn_context.activity.channel_id == Channels.ms_teams:
@@ -404,13 +406,15 @@ class WelcomeUserBot(ActivityHandler):
                         
                     except:
                         await turn_context.send_activity("This function is only supported in teams/channels!")
+                
                 else:
                     await turn_context.send_activity("This function is only supported in Microsoft Teams")
+            
             else:
                 await turn_context.send_activity("I am SORRY!, I don't understand that.")
 
 
-
+# Adaptive cards
     
     async def __send_about_card(self, turn_context:TurnContext):
         ADAPTIVE_CARD_CONTENT = {
@@ -785,7 +789,7 @@ class WelcomeUserBot(ActivityHandler):
                                         },
                                         {
                                             "type": "Input.Text",
-                                            "id": "Auth Code",
+                                            "id": "SimpleVal",
                                             "placeholder": "Enter Authorization Code Here"
                                         }
                                     ]
@@ -806,48 +810,31 @@ class WelcomeUserBot(ActivityHandler):
                             "value":"{\"bfKey\": \"bfVal\", \"conflictKey\": \"from value\"}"
                         }
                     }
-                }
-            ]
-        }
-        return await turn_context.send_activity(
-            MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
-        )
-    async def __send_test_card(self, turn_context:TurnContext):
-        ADAPTIVE_CARD_CONTENT = {
-            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "type": "AdaptiveCard",
-            "version": "1.0",
-            "body": [
-                {
-                    "type": "TextBlock",
-                    "size": "Medium",
-                    "weight": "Bolder",
-                    "text": "EnterAuth code",
-                    "horizontalAlignment": "Center",
-                    "wrap": True
                 },
                 {
-                    "type": "TextBlock",
-                    "text": (f"{OAuth_url}"),
-                    "wrap": True
-                },
-                {
-                    "type": "Input.Text",
-                    "style": "text",
-                    "id": "SimpleVal"
-                }
-            ],
-            "actions": [
-                {
-                    "type": "Action.Submit",
-                    "title": "Click me for messageBack",
-                    "data": {
-                        "msteams": {
-                            "type": "messageBack",
-                            "text": "text to bots",
-                            "value": "{\"bfKey\": \"bfVal\", \"conflictKey\": \"from value\"}"
-                        }
-                    }
+                    "type": "Action.ShowCard",
+                    "title": "Show steps to get the Authorization Code",
+                    "card": 
+                    {
+                        "type": "AdaptiveCard",
+                        "body":[
+                            {
+                                "type": "TextBlock",
+                                "text": "Steps to get the authorization code",
+                                "wrap": True,
+                                "horizontalAlignment": "Center",
+                                "size": "Medium",
+                                "weight": "Bolder"
+                            },
+                            {
+                                "type": "TextBlock",
+                                "text": "1. Click on the login button and submit your credentials.\n2. Click \"Allow Access\" to authorize the access.\n3. Copy the authorization code from the url and paste in the input field given on card.\n4. Click \"Submit Authorization Code\" button",
+                                "wrap": True
+                            }
+                        ],
+                        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                        "version": "1.0"
+                    },
                 }
             ]
         }
@@ -855,6 +842,7 @@ class WelcomeUserBot(ActivityHandler):
             MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
         )
 
+# function to add conversation reference
     def _add_conversation_reference(self, activity: Activity):
             """
             This populates the shared Dictionary that holds conversation references. In this sample,
@@ -868,13 +856,12 @@ class WelcomeUserBot(ActivityHandler):
             ] = conversation_reference
 
 
-#Time Zone converter
+# function to convert UTC to local time.
 def zone_convertor(date_time):
-    #Auto-detect zones:
     from_zone = tz.tzutc()
     to_zone = tz.tzlocal()
     utc = datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S')
-    # Tell the datetime object that it's in UTC time zone since 
+    # Tell the datetime object that it's in UTC time zone.
     utc = utc.replace(tzinfo=from_zone)
     # Convert time zone
     central = str(utc.astimezone(to_zone))
