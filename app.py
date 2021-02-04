@@ -12,7 +12,7 @@ from aiohttp.web import Request, Response, json_response
 from botbuilder.core import (
     BotFrameworkAdapterSettings,
     TurnContext,
-    BotFrameworkAdapter,
+    BotFrameworkAdapter, turn_context,
 )
 from botbuilder.core.integration import aiohttp_error_middleware
 from botbuilder.schema import Activity, ActivityTypes, ConversationReference
@@ -119,10 +119,24 @@ async def _send_post_body():
             lambda turn_context: turn_context.send_activity(f"You have a new notification"),
             CONFIG.APP_ID
         )
+# Listen for auth code
+async def auth_code(req: Request) -> Response:
+    data = await req.text()
+    await _send_auth_data()
+    return Response(status=HTTPStatus.OK, text="Login Successful !")
+
+async def _send_auth_data():
+    for conversation_reference in CONVERSATION_REFERENCES.values():
+        await ADAPTER.continue_conversation(
+            conversation_reference,
+            lambda turn_context: turn_context.send_activity(f"you got something"),
+            CONFIG.APP_ID
+        )
 
 APP = web.Application(middlewares=[aiohttp_error_middleware])
 APP.router.add_post("/api/messages", messages)
 APP.router.add_post("/api/post_notify", post_notify)
+APP.router.add_post("/api/auth_code", auth_code)
 
 if __name__ == "__main__":
     try:

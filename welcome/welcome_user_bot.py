@@ -132,10 +132,14 @@ class WelcomeUserBot(ActivityHandler):
             state = 'asdasdasdasdasdasasd'
             scope = 'patient%2F*.read%20launch%2Fpatient'
             callback_uri = "x-argonaut-app://HealthProviderLogin/"
+            my_redirect = "https://23deef16c21f.ngrok.io/api/auth_code"
+            test_redirect = "https://www.intersystems.com"
             client_id = '6A605kYem9GmG38Vo6TTzh8IFnjWHZWtRn46K1hoxQY'
+            r_client_id = "2rv9NDv0WFZVS19o3VTZbrMjqX8mjiCFrxab7dknSC0"
             client_secret = 'POrisHrcdMvUKmaR6Cea0b8jtx-z4ewVWrnaIXASO-H3tB3g5MgPV7Vqty7OP8aEbSGENWRMkeVuJJKZDdG7Pw'
+            new_secret = "UcU7Kzo-6oYRfuCfcL0wUgsiEXQIT2kQOfCqir6wFRdSXjML1y80bJp29_4Q9GqYRXI-5vIswB1KVGIhIiNXjg"
+            #OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + r_client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
             OAuth_url = authorize_url + '?response_type=code&state=' + state + '&client_id=' + client_id + '&scope='+scope+'&redirect_uri=' + callback_uri
-            
             # Process data from teams to check if there is input via cards
             channelData = turn_context.activity.channel_data
             enter_val = turn_context.activity.value
