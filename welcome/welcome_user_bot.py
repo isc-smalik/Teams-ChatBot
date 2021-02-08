@@ -21,6 +21,11 @@ import json
 from datetime import datetime
 from dateutil import tz
 from typing import Dict, List
+from pprint import pprint
+import os
+import uuid
+import random
+import string
 
 #Globals used throughout the bot
 trak_url = ''
@@ -187,7 +192,50 @@ class WelcomeUserBot(ActivityHandler):
             
             elif text in ("login"):
                 await self.__send_oauth_card(turn_context)                   
-                                        
+
+            elif text == "standard channel":
+                if turn_context.activity.channel_id == Channels.ms_teams:
+                    try:
+                        graph_token = get_graph_token()
+                        standard_channel(graph_token)
+                        await turn_context.send_activity("A standard channel created!")
+                    except:
+                        await turn_context.send_activity("This function is only supported in teams/channels!")
+                
+                else:
+                    await turn_context.send_activity("This function is only supported in Microsoft Teams")
+
+            elif text == "private channel":
+                if turn_context.activity.channel_id == Channels.ms_teams:
+                    try:
+                        graph_token = get_graph_token()
+                        members = all_team_members(graph_token)["value"]
+                        ids = []
+                        for provider in self.list_care_provider:
+                            for member in members:
+                                if member["displayName"] == provider['name']:
+                                    ids.append(member["id"])
+                        ls_member = []
+                        count = 0
+                        for id_number in ids:
+                            if count == 0:
+                                add = owner_object(id_number)
+                            else:
+                                add = member_object(id_number)
+                            ls_member.append(add)
+                            count = count + 1
+                        if len(ls_member) == 0:
+                            await turn_context.send_activity("No provider is received")
+                        else:
+                            private_channel(graph_token, ls_member)
+                            await turn_context.send_activity("A private channel with the care providers created!")
+                        self.list_care_provider.clear()
+                    except:
+                        await turn_context.send_activity("This function is only supported in teams/channels!")
+                
+                else:
+                    await turn_context.send_activity("This function is only supported in Microsoft Teams")
+
             elif text in ("patient"):
                 await turn_context.send_activity('Please type the patient ID after patient. Eg: "patient 137"')
             
@@ -390,7 +438,7 @@ class WelcomeUserBot(ActivityHandler):
                         await turn_context.send_activity("You are not logged in. Please type 'Login' to start your session !")
 
             #list all providers
-            elif text in ("notification", "noti"):
+            elif text in ("provider", "mdt"):
                 global cp_list
                 cp_list = ""
                 for provider in self.list_care_provider:
@@ -721,12 +769,12 @@ class WelcomeUserBot(ActivityHandler):
             "actions": [
                 {
                     "type": "Action.Submit",
-                    "title": "Mention Care Providers",
+                    "title": "Create a MDT meeting channel",
                     "data": {
                         "msteams" : {
 
                                 "type":"imBack",
-                                "value":"Mention Care Providers"
+                                "value":"standard channel"
                         }
 
                     }
@@ -905,3 +953,86 @@ def zone_convertor(date_time):
     central = str(utc.astimezone(to_zone))
     return central[0:16]
 
+#function to get access token from Microsoft Graph API
+def get_graph_token():
+    token_url = 'https://login.microsoftonline.com/649e5d60-a1f6-459d-b65e-aa9aa3cf6969/oauth2/v2.0/token'
+    client_id = "6b65412d-a581-48c1-965d-1aed38f3229d"
+    scope = "https://graph.microsoft.com/.default"
+    client_secret = "~UQ_EgzBMJ6-7OJ0yl_Fuy05GdpY_NWXrJ"
+
+    data = {'grant_type':'client_credentials', 'scope': scope, 'client_id': client_id, 'client_secret': client_secret}
+    access_token_response = requests.post(token_url, data=data)
+    #print(f"status code = {access_token_response.status_code}")
+    tokens = json.loads(access_token_response.text)
+    access_token = tokens['access_token']
+    return access_token
+
+#For constructing the the single member dict for channel creation
+def member_object(user_id):
+    member_added = {"@odata.type":"#microsoft.graph.aadUserConversationMember",
+                    "user@odata.bind":f"https://graph.microsoft.com/v1.0/users('{user_id}')",
+                    "roles":["member"]}
+    return member_added
+
+#For constructing the the single owner dict for channel creation
+def owner_object(user_id):
+    member_added = {"@odata.type":"#microsoft.graph.aadUserConversationMember",
+                    "user@odata.bind":f"https://graph.microsoft.com/v1.0/users('{user_id}')",
+                    "roles":["owner"]}
+    return member_added
+
+
+# function to create a privatechannel using MS Graph API:
+def private_channel(access_token, list_member):
+    # generate random string
+    letters = string.ascii_lowercase
+    ran = ''.join(random.choice(letters) for i in range(3))
+    channel_name = 'Care Provider MDT Meeting - ' + ran
+    body = {
+    "@odata.type": "#Microsoft.Graph.channel",
+    "membershipType": "private",
+    "displayName": channel_name,
+    "description": "This channel is where all care providers of one patient talk about the patient",
+    "members": list_member
+    }
+    endpoint = 'https://graph.microsoft.com/' + 'v1.0' + '/teams/74484eed-2e85-481d-b534-8e0b701e0162/channels'
+    headers = {'SdkVersion': 'sample-python-requests-0.1.0',
+                'x-client-SKU': 'sample-python-requests',
+                'SdkVersion': 'sample-python-requests',
+                'client-request-id': str(uuid.uuid4()),
+                'return-client-request-id': 'true',
+                'Authorization': 'Bearer ' + access_token}
+    graphdata = requests.post(endpoint, headers=headers, json=body).json()
+    pprint(graphdata)
+
+#Create a public channel
+def standard_channel(access_token):
+    # generate random string
+    letters = string.ascii_lowercase
+    ran = ''.join(random.choice(letters) for i in range(3))
+    channel_name = 'Care Provider MDT Meeting - ' + ran
+    body = {
+            "displayName": channel_name,
+            "description": "This channel is where care providers talk in MDT meeting",
+            "membershipType": "standard"
+            }
+    endpoint = 'https://graph.microsoft.com/' + 'v1.0' + '/teams/74484eed-2e85-481d-b534-8e0b701e0162/channels'
+    headers = {'SdkVersion': 'sample-python-requests-0.1.0',
+                'x-client-SKU': 'sample-python-requests',
+                'SdkVersion': 'sample-python-requests',
+                'client-request-id': str(uuid.uuid4()),
+                'return-client-request-id': 'true',
+                'Authorization': 'Bearer ' + access_token}
+    graphdata = requests.post(endpoint, headers=headers, json=body).json()
+    pprint(graphdata)
+#get all the team members
+def all_team_members(access_token):
+    endpoint = 'https://graph.microsoft.com/v1.0/groups/74484eed-2e85-481d-b534-8e0b701e0162/members'
+    headers = {'SdkVersion': 'sample-python-requests-0.1.0',
+                'x-client-SKU': 'sample-python-requests',
+            'client-request-id': str(uuid.uuid4()),
+            'return-client-request-id': 'true',
+            'Authorization': 'Bearer ' + access_token}
+    graphdata = requests.get(endpoint, headers=headers).json()
+
+    return graphdata
