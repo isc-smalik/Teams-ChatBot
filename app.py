@@ -5,7 +5,7 @@ import sys
 import traceback
 from datetime import datetime
 from http import HTTPStatus
-from typing import Dict, List
+from typing import Dict
 
 from aiohttp import web
 from aiohttp.web import Request, Response, json_response
@@ -17,7 +17,7 @@ from botbuilder.core import (
 from botbuilder.core.integration import aiohttp_error_middleware
 from botbuilder.schema import Activity, ActivityTypes, ConversationReference
 
-from botbuilder.core import ConversationState, MemoryStorage, UserState
+from botbuilder.core import MemoryStorage, UserState
 from bot import MyBot
 from welcome import WelcomeUserBot
 from config import DefaultConfig
@@ -71,13 +71,14 @@ CONVERSATION_REFERENCES: Dict[str, ConversationReference] = dict()
 
 #CareProviders list
 lsCP = list()
+dicRs = dict()
 
 # Create MemoryStorage, UserState
 MEMORY = MemoryStorage()
 USER_STATE = UserState(MEMORY)
 
 # Create the Bot
-BOT = WelcomeUserBot(CONVERSATION_REFERENCES,USER_STATE, lsCP)
+BOT = WelcomeUserBot(CONVERSATION_REFERENCES,USER_STATE, lsCP, dicRs)
 
 
 # Listen for incoming requests on /api/messages
@@ -133,10 +134,29 @@ async def _send_auth_data():
             CONFIG.APP_ID
         )
 
+#Listen for incoming requests on /api/results
+async def post_results(req: Request) -> Response:
+    body = await req.json()
+    name = body['name']
+    urn = body['urn']
+    link = body['link']
+    BOT.dict_results = {"name":name, "urn":urn, "link":link}
+    await _send_result_body()
+    return Response(status=HTTPStatus.OK, text="Result has been sent")
+
+async def _send_result_body():
+    for conversation_reference in CONVERSATION_REFERENCES.values():
+        await ADAPTER.continue_conversation(
+            conversation_reference,
+            lambda turn_context: turn_context.send_activity(f"You have some results"),
+            CONFIG.APP_ID
+        )
+
 APP = web.Application(middlewares=[aiohttp_error_middleware])
 APP.router.add_post("/api/messages", messages)
 APP.router.add_post("/api/post_notify", post_notify)
 APP.router.add_post("/api/auth_code", auth_code)
+APP.router.add_post("/api/results", post_results)
 
 if __name__ == "__main__":
     try:

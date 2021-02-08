@@ -20,7 +20,7 @@ import requests
 import json
 from datetime import datetime
 from dateutil import tz
-from typing import Dict
+from typing import Dict, List
 
 #Globals used throughout the bot
 trak_url = ''
@@ -39,9 +39,10 @@ token = ''
 
 
 class WelcomeUserBot(ActivityHandler):
-    def __init__(self, conversation_references: Dict[str, ConversationReference], user_state: UserState, list_care_provider):
+    def __init__(self, conversation_references: Dict[str, ConversationReference], user_state: UserState, list_care_provider, dict_results):
         self.conversation_references = conversation_references
         self.list_care_provider = list_care_provider
+        self.dict_results = dict_results
         if user_state is None:
             raise TypeError(
                 "[WelcomeUserBot]: Missing parameter. user_state is required but None was given"
@@ -413,6 +414,9 @@ class WelcomeUserBot(ActivityHandler):
                 
                 else:
                     await turn_context.send_activity("This function is only supported in Microsoft Teams")
+            
+            elif text == "result":
+                await turn_context.send_activity(f"{self.dict_results['name']}")
             
             else:
                 await turn_context.send_activity("I am SORRY!, I don't understand that.")
