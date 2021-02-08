@@ -117,7 +117,7 @@ async def _send_post_body():
     for conversation_reference in CONVERSATION_REFERENCES.values():
         await ADAPTER.continue_conversation(
             conversation_reference,
-            lambda turn_context: turn_context.send_activity(f"You have a new notification"),
+            lambda turn_context: turn_context.send_activity("You have a new MDT meeting creation, send 'mdt' to view the providers!"),
             CONFIG.APP_ID
         )
 # Listen for auth code
