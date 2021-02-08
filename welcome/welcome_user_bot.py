@@ -1,4 +1,4 @@
-from os import SEEK_END
+from os import R_OK, SEEK_END
 from botbuilder.core import (
     ActivityHandler,
     TurnContext,
@@ -36,6 +36,9 @@ allergy_data = ''
 cp_list = ''
 OAuth_url = ''
 token = ''
+r_name = ''
+r_urn = ''
+r_url = ''
 
 
 class WelcomeUserBot(ActivityHandler):
@@ -103,6 +106,9 @@ class WelcomeUserBot(ActivityHandler):
         global trak_lastUpdated
         global allergy_data
         global OAuth_url
+        global r_name
+        global r_urn
+        global r_url
         
         # Get the state properties from the turn context.
         welcome_user_state = await self.user_state_accessor.get(
@@ -389,7 +395,7 @@ class WelcomeUserBot(ActivityHandler):
                 cp_list = ""
                 for provider in self.list_care_provider:
                     cp_list = cp_list + (f"{provider['id']} - {provider['name']} \n\n")
-                await self.__send_result_card(turn_context)
+                await self.__send_mdt_card(turn_context)
             
             #mention provider in the teams
             elif text in ("mention", "mention care providers"):
@@ -415,8 +421,12 @@ class WelcomeUserBot(ActivityHandler):
                 else:
                     await turn_context.send_activity("This function is only supported in Microsoft Teams")
             
-            elif text == "result":
-                await turn_context.send_activity(f"{self.dict_results['name']}")
+            elif text in ("result", "results"):
+                r_name = self.dict_results['name']
+                r_urn = self.dict_results['urn']
+                r_url = self.dict_results['link']
+                self.dict_results.clear()
+                await self.__send_result_card(turn_context)
             
             else:
                 await turn_context.send_activity("I am SORRY!, I don't understand that.")
@@ -685,33 +695,12 @@ class WelcomeUserBot(ActivityHandler):
             MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
         )
 
-    async def __send_result_card(self, turn_context:TurnContext):
+    async def __send_mdt_card(self, turn_context:TurnContext):
         ADAPTIVE_CARD_CONTENT = {
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
             "type": "AdaptiveCard",
             "version": "1.2",
             "body": [
-                # {
-                #     "type": "TextBlock",
-                #     "text": "Result from TrakCare",
-                #     "size": "Large",
-                #     "weight": "Bolder",
-                #     "wrap": True
-                # },
-                # {
-                #     "type": "TextBlock",
-                #     "text": "Click the button below to view the result in TrakCare",
-                #     "wrap": True
-                # },
-                # {
-                #     "type": "ActionSet",
-                #     "actions": [
-                #         {
-                #             "type": "Action.Submit",
-                #             "title": "View Result"
-                #         }
-                #     ]
-                # },
                 {
                     "type": "TextBlock",
                     "text": "List of Care Providers for MDT",
@@ -846,6 +835,47 @@ class WelcomeUserBot(ActivityHandler):
                 }
             ]
         }
+        return await turn_context.send_activity(
+            MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
+        )
+
+    async def __send_result_card(self, turn_context:TurnContext):
+        ADAPTIVE_CARD_CONTENT = {
+            "type": "AdaptiveCard",
+            "body": [
+                {
+                    "type": "TextBlock",
+                    "size": "Medium",
+                    "weight": "Bolder",
+                    "text": "Result",
+                    "wrap": True
+                },
+                {
+                    "type": "FactSet",
+                    "facts": [
+                        {
+                            "title": "Name",
+                            "value": (f"{r_name}")
+                        },
+                        {
+                            "title": "URN",
+                            "value": (f"{r_urn}")
+                        }
+                    ],
+                    "separator": True
+                }
+            ],
+            "actions": [
+                {
+                    "type": "Action.OpenUrl",
+                    "title": "View results",
+                    "url": (f"{r_url}")
+                }
+            ],
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "version": "1.0"
+        }
+
         return await turn_context.send_activity(
             MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
         )
