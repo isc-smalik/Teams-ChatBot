@@ -945,6 +945,7 @@ def standard_channel(access_token):
                 'Authorization': 'Bearer ' + access_token}
     graphdata = requests.post(endpoint, headers=headers, json=body).json()
     pprint(graphdata)
+    
 #get all the team members
 def all_team_members(access_token):
     endpoint = 'https://graph.microsoft.com/v1.0/groups/74484eed-2e85-481d-b534-8e0b701e0162/members'
