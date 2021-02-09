@@ -2,7 +2,7 @@
 
 InterSystems Bot
 
-This bot has been created using [Bot Framework](https://dev.botframework.com). It is capable of fetching data from FHIR repository and present it in a well formatted manner.
+This bot has been created using [Bot Framework](https://dev.botframework.com). It is capable of fetching data from FHIR repository and present it using adaptive cards.
 
 ## Prerequisites
 
