@@ -22,7 +22,6 @@ from datetime import datetime
 from dateutil import tz
 from typing import Dict, List
 from pprint import pprint
-import os
 import uuid
 import random
 import string
@@ -616,7 +615,6 @@ class WelcomeUserBot(ActivityHandler):
             "version": "1.0",
             "body": [
                 {
-                    "speak": "Tom's Pie is a Pizza restaurant which is rated 9.3 by customers.",
                     "type": "ColumnSet",
                     "columns": [
                         {
@@ -669,85 +667,6 @@ class WelcomeUserBot(ActivityHandler):
                     "url": "https://usconfluence.iscinternal.com/display/AU101/TEAMS%3A+Technical+Discovery"
                 }
             ]
-        }
-
-        return await turn_context.send_activity(
-            MessageFactory.attachment(CardFactory.adaptive_card(ADAPTIVE_CARD_CONTENT))
-        )
-
-    async def __send_MDT_card(self, turn_context:TurnContext):
-        ADAPTIVE_CARD_CONTENT = {
-            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "type": "AdaptiveCard",
-            "version": "1.0",
-            "speak": "<s>Your  Multidisciplinary Team Meeting<break strength='weak'/> is starting at ${formatDateTime(start.dateTime, 'HH:mm')}pm</s><s>Do you want to snooze <break strength='weak'/> or do you want to send a late notification to the attendees?</s>",
-            "body": [
-                {
-                    "type": "TextBlock",
-                    "text": "Multidisciplinary Team Meeting",
-                    "size": "Large",
-                    "weight": "Bolder",
-                    "wrap": True
-                },
-                {
-                    "type": "TextBlock",
-                    "text": "Location : Microsoft Teams",
-                    "isSubtle": True,
-                    "wrap": True
-                },
-                {
-                    "type": "Input.Time",
-                    "id": "T",
-                    "label": "Time",
-                    "value": "14:00",
-                    "min": "07:00",
-                    "max": "16:00",
-                    "spacing": "Small",
-                    "separator": True
-                },
-                {
-                    "type": "TextBlock",
-                    "text": "Choose users to add to meeting",
-                    "wrap": True,
-                    "size": "Medium"
-                },
-                {
-                    "type": "Input.ChoiceSet",
-                    "choices": [
-                        {
-                            "title": "Michael",
-                            "value": "None"
-                        },
-                        {
-                            "title": "Quinten",
-                            "value": "None"
-                        },
-                        {
-                            "title": "Harshitha",
-                            "value": "None"
-                        },
-                        {
-                            "title": "Jolyon",
-                            "value": "None"
-                        },
-                        {
-                            "title": "Sergei",
-                            "value": "None"
-                        }
-                    ],
-                    "placeholder": "Placeholder text",
-                    "isMultiSelect": True,
-                    "$data": "Users"
-                }
-            ],
-            "actions": [
-                {
-                    "type": "Action.Submit",
-                    "title": "Create Meeting"
-                }
-            ],
-            "id": "Create Meating",
-            "fallbackText": "a"
         }
 
         return await turn_context.send_activity(
@@ -1048,6 +967,7 @@ def standard_channel(access_token):
                 'Authorization': 'Bearer ' + access_token}
     graphdata = requests.post(endpoint, headers=headers, json=body).json()
     pprint(graphdata)
+
 #get all the team members
 def all_team_members(access_token):
     endpoint = 'https://graph.microsoft.com/v1.0/groups/74484eed-2e85-481d-b534-8e0b701e0162/members'
