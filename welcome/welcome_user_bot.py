@@ -44,7 +44,9 @@ token = ''
 r_name = ''
 r_urn = ''
 r_url = ''
-
+ob_url = ''
+r_sender = ''
+r_message = ''
 
 class WelcomeUserBot(ActivityHandler):
     def __init__(self, conversation_references: Dict[str, ConversationReference], user_state: UserState, list_care_provider, dict_results):
@@ -114,6 +116,9 @@ class WelcomeUserBot(ActivityHandler):
         global r_name
         global r_urn
         global r_url
+        global ob_url
+        global r_sender
+        global r_message
         
         # Get the state properties from the turn context.
         welcome_user_state = await self.user_state_accessor.get(
@@ -193,6 +198,10 @@ class WelcomeUserBot(ActivityHandler):
             elif text in ("login"):
                 await self.__send_oauth_card(turn_context)                   
 
+            elif text == "delete":
+                self.list_care_provider.clear()
+                await turn_context.send_activity("The care provider list is empty now!")
+
             elif text == "standard channel":
                 if turn_context.activity.channel_id == Channels.ms_teams:
                     try:
@@ -229,7 +238,7 @@ class WelcomeUserBot(ActivityHandler):
                         else:
                             private_channel(graph_token, ls_member)
                             await turn_context.send_activity("A private channel with the care providers created!")
-                        self.list_care_provider.clear()
+
                     except:
                         await turn_context.send_activity("This function is only supported in teams/channels!")
                 
@@ -252,6 +261,7 @@ class WelcomeUserBot(ActivityHandler):
                         r_dict = json.loads(response.text)
                     
                         trak_url = (f"https://tcfhirsandbox.intersystems.com.au/t2019grxx/csp/system.Home.cls#/Direct/AW.Direct.EPR?RegistrationNo={str(r_dict['identifier'][1]['value'])}")
+                        ob_url = (f"https://tcfhirsandbox.intersystems.com.au/t2019grxx/csp/system.Home.cls#/Direct/CDUI.Test.EPR?RegistrationNo={str(r_dict['identifier'][1]['value'])}")
                         
                         try:
                             pat_name = (f"{r_dict['name'][0]['text']}")
@@ -351,6 +361,7 @@ class WelcomeUserBot(ActivityHandler):
                 elif response.status_code == 200 :
                     r_dict = json.loads(response.text)
                     trak_url = (f"https://tcfhirsandbox.intersystems.com.au/t2019grxx/csp/system.Home.cls#/Direct/AW.Direct.EPR?RegistrationNo={ltxt[1]}")
+                    ob_url = (f"https://tcfhirsandbox.intersystems.com.au/t2019grxx/csp/system.Home.cls#/Direct/CDUI.Test.EPR?RegistrationNo={ltxt[1]}")
                     
                     try:
                         pat_name = (f"{r_dict['entry'][0]['resource']['name'][0]['text']}")
@@ -461,7 +472,7 @@ class WelcomeUserBot(ActivityHandler):
                                     reply_activity = MessageFactory.text(f"{mention.text}")
                                     reply_activity.entities = [Mention().deserialize(mention.serialize())]
                                     await turn_context.send_activity(reply_activity)
-                        self.list_care_provider.clear()
+                       
                         
                     except:
                         await turn_context.send_activity("This function is only supported in teams/channels!")
@@ -473,6 +484,8 @@ class WelcomeUserBot(ActivityHandler):
                 r_name = self.dict_results['name']
                 r_urn = self.dict_results['urn']
                 r_url = self.dict_results['link']
+                r_sender = self.dict_results['sender']
+                r_message = self.dict_results['message']
                 self.dict_results.clear()
                 await self.__send_result_card(turn_context)
             
@@ -583,11 +596,9 @@ class WelcomeUserBot(ActivityHandler):
                     }
                 },
                 {
-                    "type": "Action.ShowCard",
+                    "type": "Action.OpenUrl",
                     "title": "Observations",
-                    "card": {
-                        "type": "AdaptiveCard"
-                    }
+                    "url": (f"{ob_url}")
                 }
             ],
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
@@ -908,6 +919,14 @@ class WelcomeUserBot(ActivityHandler):
                         {
                             "title": "URN",
                             "value": (f"{r_urn}")
+                        },
+                                                {
+                            "title": "Sender",
+                            "value": (f"{r_sender}")
+                        },
+                                                {
+                            "title": "message",
+                            "value": (f"{r_message}")
                         }
                     ],
                     "separator": True
@@ -921,7 +940,7 @@ class WelcomeUserBot(ActivityHandler):
                 }
             ],
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "version": "1.0"
+            "version": "1.2"
         }
 
         return await turn_context.send_activity(

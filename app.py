@@ -117,7 +117,7 @@ async def _send_post_body():
     for conversation_reference in CONVERSATION_REFERENCES.values():
         await ADAPTER.continue_conversation(
             conversation_reference,
-            lambda turn_context: turn_context.send_activity("You have a new MDT meeting creation, send 'mdt' to view the providers!"),
+            lambda turn_context: turn_context.send_activity("You have a new MDT meeting creation, send 'mdt' to view the providers! You can send 'delete' to clear the care provider list"),
             CONFIG.APP_ID
         )
 # Listen for auth code
@@ -130,7 +130,7 @@ async def _send_auth_data():
     for conversation_reference in CONVERSATION_REFERENCES.values():
         await ADAPTER.continue_conversation(
             conversation_reference,
-            lambda turn_context: turn_context.send_activity(f"you got something"),
+            lambda turn_context: turn_context.send_activity("you got something"),
             CONFIG.APP_ID
         )
 
@@ -140,7 +140,9 @@ async def post_results(req: Request) -> Response:
     name = body['name']
     urn = body['urn']
     link = body['link']
-    BOT.dict_results = {"name":name, "urn":urn, "link":link}
+    sender = body['sendersName']
+    message = body['message']
+    BOT.dict_results = {"name":name, "urn":urn, "link":link, "sender" : sender, "message": message}
     await _send_result_body()
     return Response(status=HTTPStatus.OK, text="Result has been sent")
 
@@ -148,7 +150,7 @@ async def _send_result_body():
     for conversation_reference in CONVERSATION_REFERENCES.values():
         await ADAPTER.continue_conversation(
             conversation_reference,
-            lambda turn_context: turn_context.send_activity(f"You have some results"),
+            lambda turn_context: turn_context.send_activity("You have some results"),
             CONFIG.APP_ID
         )
 
