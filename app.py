@@ -1,8 +1,8 @@
 #Author: Yuanhao(Michael) Zheng - Email: likeping13@gmail.com  LinkedIn: https://www.linkedin.com/in/yuanhao-zheng-ba38001b0/
 #        Sachin Malik           - Email: Sachin.Malik@intersystems.com
 #
-#This file is the Bot class file that contain all the behaviours of the bot
-#
+#This file is the main file of our chat bot.User will need to run it to run the bot
+#it contains serveral http endpoints including the message endpoint, the mdt creation notification endpoint and the result forwarding endpoint
 #
 import sys
 import traceback
