@@ -1,5 +1,7 @@
-#Author: Yuanhao(Michael) Zheng - Email: likeping13@gmail.com  LinkedIn: https://www.linkedin.com/in/yuanhao-zheng-ba38001b0/
-#        Sachin Malik           - Email: Sachin.Malik@intersystems.com
+# Author: Yuanhao(Michael) Zheng - Email: likeping13@gmail.com  
+#         Sachin Malik           - Email: Sachin.Malik@intersystems.com
+#         Jianjie(Quentin) Yu    - Email: Jianjie.Yu@InterSystems.com
+#         Harshitha Acha         - Email: Harshitha.Acha@InterSystems.com
 #
 #This file is the Bot class file that contain all the behaviours of the bot
 #
