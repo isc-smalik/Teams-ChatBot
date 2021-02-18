@@ -9,9 +9,9 @@ This bot has been created using [Bot Framework](https://dev.botframework.com). I
 The only useful code(file) here are - welcome/welcome_user_bot.py
                                     - app.py
                                     - config.py,
-\nThe welcome/welcome_user_bot.py is the code for the behaviour of the bot
-\nThe app.py is the main python file that needs to be run
-\nThe config.py is used to config the client id and secret of Microsoft Azure bot service
+(The welcome/welcome_user_bot.py is the code for the behaviour of the bot,
+The app.py is the main python file that needs to be run,
+The config.py is used to config the client id and secret of Microsoft Azure bot service)
 
 ## Prerequisites
 
