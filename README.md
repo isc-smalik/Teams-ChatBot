@@ -4,6 +4,12 @@ InterSystems Bot
 
 This bot has been created using [Bot Framework](https://dev.botframework.com). It is capable of fetching data from FHIR repository and present it using adaptive cards.
 
+## Code usage
+
+The only useful code(file) here are welcome/welcome_user_bot.py
+                                    app.py
+                                    config.py
+
 ## Prerequisites
 
 This sample **requires** prerequisites in order to run.
