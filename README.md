@@ -12,7 +12,7 @@ The only useful code(file) here are - welcome/welcome_user_bot.py
 - The welcome/welcome_user_bot.py is the code for the behaviour of the bot,
 - The app.py is the main python file that needs to be run,
 - The config.py is used to config the client id and secret of Microsoft Azure bot service
-- 
+
 ## Prerequisites
 
 This sample **requires** prerequisites in order to run.
