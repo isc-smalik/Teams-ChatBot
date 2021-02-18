@@ -6,9 +6,9 @@ This bot has been created using [Bot Framework](https://dev.botframework.com). I
 
 ## Code usage
 
-The only useful code(file) here are welcome/welcome_user_bot.py
-                                    app.py
-                                    config.py
+The only useful code(file) here are - welcome/welcome_user_bot.py
+                                    - app.py
+                                    - config.py
 
 ## Prerequisites
 
