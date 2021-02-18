@@ -4,6 +4,13 @@ InterSystems Bot
 
 This bot has been created using [Bot Framework](https://dev.botframework.com). It is capable of fetching data from FHIR repository and present it using adaptive cards.
 
+# Author
+InterSystems 2020 - 2021 Australian interns:
+- Sachin Malik (Sachin.Malik@InterSystems.com)
+- Yuanhao Zheng (likeping13@gmail.com)
+- Jianjie Yu (Jianjie.Yu@InterSystems.com)
+- Harshitha Acha (Harshitha.Acha@Intersystems.com)
+
 ## Code usage
 - The only useful code/files are "bot/welcome_user_bot.py", "app.py" and "config.py"
 
