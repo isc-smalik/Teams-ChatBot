@@ -1,6 +1,9 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-#abcd
+#Author: Yuanhao(Michael) Zheng - Email: likeping13@gmail.com  LinkedIn: https://www.linkedin.com/in/yuanhao-zheng-ba38001b0/
+#        Sachin Malik           - Email: Sachin.Malik@intersystems.com
+#
+#This file is the Bot class file that contain all the behaviours of the bot
+#
+#
 import sys
 import traceback
 from datetime import datetime
